@@ -1,47 +1,24 @@
-<<<<<<< HEAD
-
-=======
-def buildStatus    = "FAILED"
-def slackColor     = "warning"
-def slackChannelID = 'C03NE82PLMQ'
->>>>>>> origin/main
-
 pipeline {
-  agent any
-  tools {
-    maven 'Maven 3.8.6'
-    jdk 'jd11'
-  }
-  triggers{
-    cron 'H 2,16 * * *'
-  }
-  stages {
-    stage('Run Tests') {
-      steps {
-        sh 'mvn clean'
-        sh 'mvn test'
-      }
+    agent any
+    tools{
+        maven 'MAVEN'
     }
-  }
-  post{
-    always{
-      junit '**/surefire-reports/*.xml'
-      cucumber buildStatus: 'null', customCssFiles: '', customJsFiles: '', failedFeaturesNumber: -1, failedScenariosNumber: -1, failedStepsNumber: -1, fileIncludePattern: 'target/cucumber.json', pendingStepsNumber: -1, skippedStepsNumber: -1, sortingMethod: 'ALPHABETICAL', undefinedStepsNumber: -1
-    }
-    success {
-      script {
-        buildStatus = "SUCCESS"
-        slackColor = "good"
-      }
-    }
-    cleanup {
-<<<<<<< HEAD
 
-=======
-      script {
-        slackSend channel: slackChannelID, color: "${slackColor}", message: "*${buildStatus}*: `${env.JOB_NAME}` *#${env.BUILD_NUMBER}* \n<${env.BUILD_URL}/console|Console Log>"
-      }
->>>>>>> origin/main
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Hello World'
+       checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'df90ef4e-c0f4-4225-b8dd-7e80de820e9c', url: 'https://github.com/mbora172/jdbcPresent.git']]])
+                      sh "mvn -Dmaven.test.failure.ignore=true clean package"
+
+            }
+            }
     }
-  }
-}
+    post{
+        always{
+            junit(
+                allowEmptyResults:true,
+                testResults: 'test-reports/.xml')
+            }
+        }
+    }
